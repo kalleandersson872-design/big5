@@ -14,9 +14,6 @@
       --accent:#1f7a3a;
       --accent-dark:#16632f;
       --accent-soft:#eaf4ed;
-      --ok:#1f7a3a;
-      --warn:#b45309;
-      --bad:#b91c1c;
       --bar-muted:#e5e7eb;
       --border:#e5e7eb;
     }
@@ -118,14 +115,28 @@
       cursor:pointer;
       user-select:none;
       transition:transform 120ms ease,border 120ms ease,background 120ms ease;
-      font-size:20px;
-      font-weight:800;
-      line-height:1;
+      min-height:76px;
+      color:#111827;
       display:flex;
+      flex-direction:column;
       align-items:center;
       justify-content:center;
-      height:60px;
-      color:#111827;
+      gap:4px;
+      padding:8px;
+      text-align:center;
+    }
+
+    .option-number{
+      font-size:22px;
+      font-weight:900;
+      line-height:1;
+    }
+
+    .option-label{
+      font-size:11px;
+      font-weight:600;
+      color:var(--muted);
+      line-height:1.2;
     }
 
     .scale .option:hover{
@@ -140,6 +151,8 @@
       border-color:var(--accent);
       color:var(--accent);
     }
+
+    .scale .option.active .option-label{color:var(--accent)}
 
     .legend{
       display:flex;
@@ -239,8 +252,6 @@
       margin-bottom:14px;
     }
 
-    .result-row:last-child{margin-bottom:0}
-
     .pill{
       display:inline-block;
       padding:4px 8px;
@@ -252,18 +263,48 @@
       margin-left:8px;
     }
 
-    .input{
+    .input,
+    .textarea{
       width:100%;
       padding:12px 14px;
       border-radius:10px;
       border:1px solid var(--border);
       background:#ffffff;
       color:var(--text);
+      font-family:inherit;
     }
 
-    .input:focus{
+    .textarea{
+      min-height:110px;
+      resize:vertical;
+    }
+
+    .input:focus,
+    .textarea:focus{
       outline:2px solid var(--accent);
       border-color:var(--accent);
+    }
+
+    .form{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+
+    .row{
+      display:grid;
+      gap:10px;
+    }
+
+    .helper{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .error{
+      color:#b91c1c;
+      font-size:12px;
+      display:none;
     }
 
     .hidden{display:none}
@@ -284,11 +325,14 @@
       font-weight:700;
     }
 
+    @media(min-width:640px){
+      .row{grid-template-columns:1fr 1fr}
+    }
+
     @media(max-width:640px){
       body{padding:12px}
       .question{font-size:22px}
-      .scale{gap:8px}
-      .scale .option{height:52px; font-size:18px}
+      .scale{grid-template-columns:1fr}
       .actions{display:grid}
     }
   </style>
@@ -369,63 +413,68 @@
     };
 
     const QUESTIONS = [
-      {id:1, d:"O", text:"Jag tycker om att prova nya saker.", reverse:false},
-      {id:2, d:"O", text:"Jag har ett livligt fantasiliv.", reverse:false},
-      {id:3, d:"O", text:"Jag är intresserad av konst, musik eller litteratur.", reverse:false},
-      {id:4, d:"O", text:"Jag funderar ofta på filosofiska eller abstrakta frågor.", reverse:false},
-      {id:5, d:"O", text:"Jag uppskattar förändring och variation.", reverse:false},
-      {id:6, d:"O", text:"Jag föredrar rutiner framför nya upplevelser.", reverse:true},
-      {id:7, d:"O", text:"Jag tycker det är stimulerande att lära mig om nya idéer.", reverse:false},
-      {id:8, d:"O", text:"Jag föredrar det bekanta framför det okända.", reverse:true},
-      {id:9, d:"O", text:"Jag är kreativ i mitt arbete eller på fritiden.", reverse:false},
-      {id:10, d:"O", text:"Jag tycker om att reflektera över djupa frågor.", reverse:false},
+      {id:1, d:"C", text:"Jag planerar ofta i förväg."},
+      {id:2, d:"E", text:"Jag tycker om att umgås i stora grupper."},
+      {id:3, d:"N", text:"Jag oroar mig ofta för saker."},
+      {id:4, d:"O", text:"Jag tycker om att prova nya saker."},
+      {id:5, d:"A", text:"Jag litar på att människor vill mig väl."},
 
-      {id:11, d:"C", text:"Jag planerar ofta i förväg.", reverse:false},
-      {id:12, d:"C", text:"Jag slutför alltid det jag påbörjar.", reverse:false},
-      {id:13, d:"C", text:"Jag tycker om att ha ordning omkring mig.", reverse:false},
-      {id:14, d:"C", text:"Jag kan motstå frestelser för att nå långsiktiga mål.", reverse:false},
-      {id:15, d:"C", text:"Jag är punktlig.", reverse:false},
-      {id:16, d:"C", text:"Jag skjuter ofta upp saker jag borde göra.", reverse:true},
-      {id:17, d:"C", text:"Jag arbetar hårt för att uppnå mina mål.", reverse:false},
-      {id:18, d:"C", text:"Jag låter ofta slumpen styra mina handlingar.", reverse:true},
-      {id:19, d:"C", text:"Jag tar ansvar för mina åtaganden.", reverse:false},
-      {id:20, d:"C", text:"Jag har lätt för att organisera mitt arbete.", reverse:false},
+      {id:6, d:"C", text:"Jag gör ofta saker i sista stund."},
+      {id:7, d:"E", text:"Jag trivs bäst i lugna sammanhang med få personer."},
+      {id:8, d:"N", text:"Jag är lugn och stabil i de flesta situationer."},
+      {id:9, d:"O", text:"Jag trivs med rutiner och bekanta miljöer."},
+      {id:10, d:"A", text:"Jag prioriterar ofta mina egna behov före andras."},
 
-      {id:21, d:"E", text:"Jag tycker om att umgås i stora grupper.", reverse:false},
-      {id:22, d:"E", text:"Jag känner mig energifylld när jag är med andra människor.", reverse:false},
-      {id:23, d:"E", text:"Jag tar ofta initiativ i sociala sammanhang.", reverse:false},
-      {id:24, d:"E", text:"Jag blir snabbt bekväm i nya sociala situationer.", reverse:false},
-      {id:25, d:"E", text:"Jag talar gärna i centrum för uppmärksamhet.", reverse:false},
-      {id:26, d:"E", text:"Jag föredrar ofta att vara ensam.", reverse:true},
-      {id:27, d:"E", text:"Jag har lätt för att skapa nya kontakter.", reverse:false},
-      {id:28, d:"E", text:"Jag är entusiastisk i mina aktiviteter.", reverse:false},
-      {id:29, d:"E", text:"Jag har många vänner och bekanta.", reverse:false},
-      {id:30, d:"E", text:"Jag är tystlåten och reserverad.", reverse:true},
+      {id:11, d:"O", text:"Jag har ett livligt fantasiliv."},
+      {id:12, d:"C", text:"Jag slutför vanligtvis det jag påbörjar."},
+      {id:13, d:"E", text:"Jag känner mig energifylld när jag är med andra människor."},
+      {id:14, d:"A", text:"Jag hjälper gärna andra utan att förvänta mig något tillbaka."},
+      {id:15, d:"N", text:"Jag blir lätt stressad."},
 
-      {id:31, d:"A", text:"Jag litar på att människor vill mig väl.", reverse:false},
-      {id:32, d:"A", text:"Jag hjälper gärna andra utan att förvänta mig något tillbaka.", reverse:false},
-      {id:33, d:"A", text:"Jag är tolerant mot personer som tycker annorlunda än jag.", reverse:false},
-      {id:34, d:"A", text:"Jag försöker undvika konflikter.", reverse:false},
-      {id:35, d:"A", text:"Jag uppfattas som vänlig och omtänksam.", reverse:false},
-      {id:36, d:"A", text:"Jag sätter ofta mina egna behov först.", reverse:true},
-      {id:37, d:"A", text:"Jag visar empati för andras känslor.", reverse:false},
-      {id:38, d:"A", text:"Jag samarbetar hellre än tävlar.", reverse:false},
-      {id:39, d:"A", text:"Jag är generös med min tid och energi.", reverse:false},
-      {id:40, d:"A", text:"Jag misstänker ofta andras motiv.", reverse:true},
+      {id:16, d:"O", text:"Jag är intresserad av konst, musik eller litteratur."},
+      {id:17, d:"C", text:"Jag tycker om att ha ordning omkring mig."},
+      {id:18, d:"E", text:"Jag tar ofta initiativ i sociala sammanhang."},
+      {id:19, d:"A", text:"Jag är tolerant mot personer som tycker annorlunda än jag."},
+      {id:20, d:"N", text:"Jag känner mig ofta osäker."},
 
-      {id:41, d:"N", text:"Jag oroar mig ofta för saker.", reverse:false},
-      {id:42, d:"N", text:"Jag blir lätt stressad.", reverse:false},
-      {id:43, d:"N", text:"Jag känner mig ofta osäker.", reverse:false},
-      {id:44, d:"N", text:"Jag har svårt att hantera motgångar.", reverse:false},
-      {id:45, d:"N", text:"Jag blir lätt nedstämd.", reverse:false},
-      {id:46, d:"N", text:"Jag är lugn och stabil i de flesta situationer.", reverse:true},
-      {id:47, d:"N", text:"Jag blir lätt irriterad.", reverse:false},
-      {id:48, d:"N", text:"Jag känner mig ofta sårbar.", reverse:false},
-      {id:49, d:"N", text:"Jag reagerar starkt på kritik.", reverse:false},
-      {id:50, d:"N", text:"Jag upplever mig oftast balanserad och trygg.", reverse:true}
+      {id:21, d:"O", text:"Jag funderar ofta på filosofiska eller abstrakta frågor."},
+      {id:22, d:"C", text:"Jag kan motstå frestelser för att nå långsiktiga mål."},
+      {id:23, d:"E", text:"Jag blir snabbt bekväm i nya sociala situationer."},
+      {id:24, d:"A", text:"Jag försöker undvika onödiga konflikter."},
+      {id:25, d:"N", text:"Jag har svårt att hantera motgångar."},
+
+      {id:26, d:"O", text:"Jag uppskattar förändring och variation."},
+      {id:27, d:"C", text:"Jag är punktlig."},
+      {id:28, d:"E", text:"Jag talar gärna inför andra."},
+      {id:29, d:"A", text:"Jag uppfattas som vänlig och omtänksam."},
+      {id:30, d:"N", text:"Jag blir lätt nedstämd."},
+
+      {id:31, d:"O", text:"Jag tycker det är stimulerande att lära mig om nya idéer."},
+      {id:32, d:"C", text:"Jag arbetar hårt för att uppnå mina mål."},
+      {id:33, d:"E", text:"Jag har lätt för att skapa nya kontakter."},
+      {id:34, d:"A", text:"Jag visar empati för andras känslor."},
+      {id:35, d:"N", text:"Jag blir lätt irriterad."},
+
+      {id:36, d:"O", text:"Jag föredrar det bekanta framför det helt nya."},
+      {id:37, d:"C", text:"Jag låter ofta slumpen styra mina handlingar."},
+      {id:38, d:"E", text:"Jag är entusiastisk i mina aktiviteter."},
+      {id:39, d:"A", text:"Jag samarbetar hellre än tävlar."},
+      {id:40, d:"N", text:"Jag känner mig ofta sårbar."},
+
+      {id:41, d:"O", text:"Jag är kreativ i mitt arbete eller på fritiden."},
+      {id:42, d:"C", text:"Jag tar ansvar för mina åtaganden."},
+      {id:43, d:"E", text:"Jag har många vänner och bekanta."},
+      {id:44, d:"A", text:"Jag är generös med min tid och energi."},
+      {id:45, d:"N", text:"Jag reagerar starkt på kritik."},
+
+      {id:46, d:"O", text:"Jag tycker om att reflektera över djupa frågor."},
+      {id:47, d:"C", text:"Jag har lätt för att organisera mitt arbete."},
+      {id:48, d:"E", text:"Jag är ofta reserverad i sociala sammanhang."},
+      {id:49, d:"A", text:"Jag är ofta misstänksam mot andras motiv."},
+      {id:50, d:"N", text:"Jag upplever mig oftast balanserad och trygg."}
     ];
 
-    const STORAGE_KEY = "bigfive_one_question_answers";
+    const STORAGE_KEY = "bigfive_no_reverse_contact";
 
     const state = {
       index:0,
@@ -450,14 +499,10 @@
 
     function loadAnswers(){
       const saved = localStorage.getItem(STORAGE_KEY);
-
-      if(!saved){
-        return;
-      }
+      if(!saved) return;
 
       try{
         const parsed = JSON.parse(saved);
-
         if(Array.isArray(parsed) && parsed.length === QUESTIONS.length){
           state.answers = parsed;
         }
@@ -481,7 +526,7 @@
     function renderQuestion(){
       const q = QUESTIONS[state.index];
 
-      qThemeEl.textContent = `${DIMENSIONS[q.d]}${q.reverse ? " · omvänd skala" : ""}`;
+      qThemeEl.textContent = DIMENSIONS[q.d];
       qIdEl.textContent = `Fråga ${state.index + 1}/${QUESTIONS.length}`;
       qTextEl.textContent = q.text;
 
@@ -491,8 +536,10 @@
         const el = document.createElement('button');
         el.type = 'button';
         el.className = 'option';
-        el.textContent = i;
-        el.title = `${i} – ${LABELS[i]}`;
+        el.innerHTML = `
+          <div class="option-number">${i}</div>
+          <div class="option-label">${LABELS[i]}</div>
+        `;
 
         if(state.answers[state.index] === i){
           el.classList.add('active');
@@ -553,41 +600,21 @@
       );
     }
 
-    function adjustedScore(value, reverse){
-      return reverse ? 6 - value : value;
-    }
-
     function scoreResults(){
-      const scores = {
-        O:0,
-        C:0,
-        E:0,
-        A:0,
-        N:0
-      };
+      const scores = {O:0,C:0,E:0,A:0,N:0};
 
       QUESTIONS.forEach((q, i) => {
         const raw = state.answers[i];
-
-        if(raw === null){
-          return;
-        }
-
-        scores[q.d] += adjustedScore(raw, q.reverse);
+        if(raw === null) return;
+        scores[q.d] += raw;
       });
 
       return scores;
     }
 
     function bandLabel(score){
-      if(score <= 24){
-        return "Lägre nivå";
-      }
-
-      if(score <= 37){
-        return "Medelnivå";
-      }
-
+      if(score <= 24) return "Lägre nivå";
+      if(score <= 37) return "Medelnivå";
       return "Hög nivå";
     }
 
@@ -610,64 +637,26 @@
         </p>
 
         <div style="display:grid; gap:18px; justify-items:center; margin-top:12px;">
-
           <img
-            src="swish-qr.png"
+            src="https://github.com/kalleandersson872-design/Coachingtest/blob/main/swish.JPG?raw=true"
             alt="Swish QR"
-            style="
-              width:220px;
-              border-radius:18px;
-              border:1px solid var(--border);
-              background:#ffffff;
-              padding:12px;
-            "
+            style="width:220px; border-radius:18px; border:1px solid var(--border); background:#ffffff; padding:12px;"
           >
 
           <div style="text-align:center;">
-            <div style="font-size:30px; font-weight:800; color:var(--accent);">
-              19 KR
-            </div>
-
-            <div class="muted">
-              Swisha och klicka därefter på ”Jag har betalat”.
-            </div>
+            <div style="font-size:30px; font-weight:800; color:var(--accent);">19 KR</div>
+            <div class="muted">Swisha och klicka därefter på ”Jag har betalat”.</div>
           </div>
-
         </div>
 
         <div style="margin-top:24px; display:grid; gap:12px;">
-
-          <button class="btn primary" id="paidBtn">
-            Jag har betalat
-          </button>
+          <button class="btn primary" id="paidBtn">Jag har betalat</button>
 
           <div id="passwordWrap" class="hidden">
-
-            <input
-              type="password"
-              id="resultPassword"
-              class="input"
-              placeholder="Ange lösenord"
-            >
-
-            <button class="btn primary" id="unlockBtn" style="margin-top:10px;">
-              Lås upp resultat
-            </button>
-
-            <div
-              id="pwError"
-              style="
-                color:#b91c1c;
-                font-size:13px;
-                margin-top:8px;
-                display:none;
-              "
-            >
-              Fel lösenord
-            </div>
-
+            <input type="password" id="resultPassword" class="input" placeholder="Ange lösenord">
+            <button class="btn primary" id="unlockBtn" style="margin-top:10px;">Lås upp resultat</button>
+            <div id="pwError" style="color:#b91c1c; font-size:13px; margin-top:8px; display:none;">Fel lösenord</div>
           </div>
-
         </div>
       `;
 
@@ -692,10 +681,7 @@
 
       resultContainer.innerHTML = `
         <h2>Ditt resultat</h2>
-
-        <div class="muted">
-          Resultatet visas som staplar per Big Five-dimension.
-        </div>
+        <div class="muted">Resultatet visas som staplar per Big Five-dimension.</div>
       `;
 
       Object.entries(DIMENSIONS).forEach(([key, name]) => {
@@ -719,21 +705,74 @@
         resultContainer.appendChild(row);
       });
 
+      const contact = document.createElement('div');
+      contact.className = 'result';
+
+      contact.innerHTML = `
+        <h2>Kontakta mig</h2>
+
+        <p class="helper">
+          Fyll i namn, e-post och meddelande om du vill boka ett fördjupande samtal eller ställa en fråga.
+        </p>
+
+        <form
+          id="contactForm"
+          class="form"
+          action="https://formsubmit.co/kalleforshell@gmail.com"
+          method="POST"
+          onsubmit="return prepareFormPayload()"
+        >
+          <input type="hidden" name="_subject" value="Kontakt från Big Five-test" />
+          <input type="hidden" name="_template" value="table" />
+          <input type="hidden" name="_captcha" value="false" />
+          <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off" />
+
+          <div class="row">
+            <div>
+              <label for="cf_name" class="helper">Namn</label>
+              <input id="cf_name" class="input" type="text" name="Namn" required autocomplete="name" />
+              <div id="err_name" class="error">Ange ditt namn.</div>
+            </div>
+
+            <div>
+              <label for="cf_email" class="helper">E-post</label>
+              <input id="cf_email" class="input" type="email" name="E-post" required autocomplete="email" />
+              <div id="err_email" class="error">Ange en giltig e-postadress.</div>
+            </div>
+          </div>
+
+          <div>
+            <label for="cf_message" class="helper">Meddelande</label>
+            <textarea id="cf_message" class="textarea" name="Meddelande" placeholder="Skriv ditt meddelande här..."></textarea>
+          </div>
+
+          <input type="hidden" id="cf_results" name="Big Five-resultat" />
+
+          <label class="helper" style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+            <input id="cf_consent" type="checkbox" required />
+            Jag samtycker till att mina uppgifter används för kontakt enligt GDPR.
+          </label>
+
+          <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap">
+            <button class="btn primary" type="submit">Skicka</button>
+            <a class="btn ghost" href="mailto:kalleforshell@gmail.com">Öppna i mejlklient</a>
+          </div>
+
+          <p class="helper" style="margin-top:6px;">
+            Kontakt: <a href="mailto:kalleforshell@gmail.com">kalleforshell@gmail.com</a>
+          </p>
+        </form>
+      `;
+
+      resultContainer.appendChild(contact);
+
       const actions = document.createElement('div');
       actions.className = 'actions';
 
       actions.innerHTML = `
-        <button class="btn ghost" id="restartBtn2">
-          Starta om
-        </button>
-
-        <button class="btn primary" id="exportBtn2">
-          Exportera resultat
-        </button>
-
-        <button class="btn ghost" id="printBtn2">
-          Skriv ut / PDF
-        </button>
+        <button class="btn ghost" id="restartBtn2">Starta om</button>
+        <button class="btn primary" id="exportBtn2">Exportera resultat</button>
+        <button class="btn ghost" id="printBtn2">Skriv ut / PDF</button>
       `;
 
       resultContainer.appendChild(actions);
@@ -741,6 +780,28 @@
       document.getElementById('restartBtn2').addEventListener('click', restart);
       document.getElementById('exportBtn2').addEventListener('click', exportTxt);
       document.getElementById('printBtn2').addEventListener('click', () => window.print());
+    }
+
+    function prepareFormPayload(){
+      const name = document.getElementById('cf_name').value.trim();
+      const email = document.getElementById('cf_email').value.trim();
+      const consent = document.getElementById('cf_consent').checked;
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+      document.getElementById('err_name').style.display = name ? 'none' : 'block';
+      document.getElementById('err_email').style.display = emailOk ? 'none' : 'block';
+
+      if(!name || !emailOk || !consent){
+        return false;
+      }
+
+      const scores = scoreResults();
+
+      document.getElementById('cf_results').value = Object.entries(DIMENSIONS)
+        .map(([key, name]) => `${name}: ${scores[key]}/50 – ${bandLabel(scores[key])}`)
+        .join(' | ');
+
+      return true;
     }
 
     function restart(){
@@ -776,7 +837,7 @@
       QUESTIONS.forEach((q, i) => {
         const val = state.answers[i] ?? "-";
         const label = LABELS[val] || "-";
-        lines.push(`Fråga ${q.id} | ${DIMENSIONS[q.d]} | ${q.text} — Svar: ${val} (${label})${q.reverse ? " | Omvänd skala" : ""}`);
+        lines.push(`Fråga ${q.id} | ${DIMENSIONS[q.d]} | ${q.text} — Svar: ${val} (${label})`);
       });
 
       const blob = new Blob([lines.join('\n')], {type:'text/plain;charset=utf-8'});
