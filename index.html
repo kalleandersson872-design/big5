@@ -252,6 +252,20 @@
       margin-left:8px;
     }
 
+    .input{
+      width:100%;
+      padding:12px 14px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#ffffff;
+      color:var(--text);
+    }
+
+    .input:focus{
+      outline:2px solid var(--accent);
+      border-color:var(--accent);
+    }
+
     .hidden{display:none}
 
     .footer{
@@ -326,16 +340,7 @@
       </div>
 
       <div class="content hidden" id="resultView" aria-live="polite">
-        <h2>Resultat</h2>
-        <div class="muted">Resultatet visas som staplar per Big Five-dimension.</div>
-
         <div class="result" id="resultContainer"></div>
-
-        <div class="actions">
-          <button class="btn ghost" id="restartBtn">Starta om</button>
-          <button class="btn primary" id="exportBtn">Exportera resultat</button>
-          <button class="btn ghost" id="printBtn">Skriv ut / PDF</button>
-        </div>
       </div>
 
       <div class="footer">
@@ -441,9 +446,6 @@
     const questionView = $('#questionView');
     const resultView = $('#resultView');
     const resultContainer = $('#resultContainer');
-    const restartBtn = $('#restartBtn');
-    const exportBtn = $('#exportBtn');
-    const printBtn = $('#printBtn');
     const jumpUnanswered = $('#jumpUnanswered');
 
     function loadAnswers(){
@@ -600,9 +602,101 @@
       questionView.classList.add('hidden');
       resultView.classList.remove('hidden');
 
+      resultContainer.innerHTML = `
+        <h2>Lås upp ditt resultat</h2>
+
+        <p class="muted">
+          För att se din fullständiga Big Five-profil behöver du genomföra betalning via Swish.
+        </p>
+
+        <div style="display:grid; gap:18px; justify-items:center; margin-top:12px;">
+
+          <img
+            src="swish-qr.png"
+            alt="Swish QR"
+            style="
+              width:220px;
+              border-radius:18px;
+              border:1px solid var(--border);
+              background:#ffffff;
+              padding:12px;
+            "
+          >
+
+          <div style="text-align:center;">
+            <div style="font-size:30px; font-weight:800; color:var(--accent);">
+              19 KR
+            </div>
+
+            <div class="muted">
+              Swisha och klicka därefter på ”Jag har betalat”.
+            </div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:24px; display:grid; gap:12px;">
+
+          <button class="btn primary" id="paidBtn">
+            Jag har betalat
+          </button>
+
+          <div id="passwordWrap" class="hidden">
+
+            <input
+              type="password"
+              id="resultPassword"
+              class="input"
+              placeholder="Ange lösenord"
+            >
+
+            <button class="btn primary" id="unlockBtn" style="margin-top:10px;">
+              Lås upp resultat
+            </button>
+
+            <div
+              id="pwError"
+              style="
+                color:#b91c1c;
+                font-size:13px;
+                margin-top:8px;
+                display:none;
+              "
+            >
+              Fel lösenord
+            </div>
+
+          </div>
+
+        </div>
+      `;
+
+      document.getElementById('paidBtn').addEventListener('click', () => {
+        document.getElementById('passwordWrap').classList.remove('hidden');
+      });
+
+      document.getElementById('unlockBtn').addEventListener('click', () => {
+        const pw = document.getElementById('resultPassword').value.trim();
+
+        if(pw !== "hejhej123"){
+          document.getElementById('pwError').style.display = 'block';
+          return;
+        }
+
+        renderActualResults();
+      });
+    }
+
+    function renderActualResults(){
       const scores = scoreResults();
 
-      resultContainer.innerHTML = '';
+      resultContainer.innerHTML = `
+        <h2>Ditt resultat</h2>
+
+        <div class="muted">
+          Resultatet visas som staplar per Big Five-dimension.
+        </div>
+      `;
 
       Object.entries(DIMENSIONS).forEach(([key, name]) => {
         const score = scores[key];
@@ -625,7 +719,28 @@
         resultContainer.appendChild(row);
       });
 
-      exportBtn.focus();
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      actions.innerHTML = `
+        <button class="btn ghost" id="restartBtn2">
+          Starta om
+        </button>
+
+        <button class="btn primary" id="exportBtn2">
+          Exportera resultat
+        </button>
+
+        <button class="btn ghost" id="printBtn2">
+          Skriv ut / PDF
+        </button>
+      `;
+
+      resultContainer.appendChild(actions);
+
+      document.getElementById('restartBtn2').addEventListener('click', restart);
+      document.getElementById('exportBtn2').addEventListener('click', exportTxt);
+      document.getElementById('printBtn2').addEventListener('click', () => window.print());
     }
 
     function restart(){
@@ -687,9 +802,6 @@
       }
 
       if(!resultView.classList.contains('hidden')){
-        if(e.key === 'Enter'){
-          exportBtn.focus();
-        }
         return;
       }
 
@@ -719,9 +831,6 @@
     nextBtn.addEventListener('click', next);
     prevBtn.addEventListener('click', prev);
     clearBtn.addEventListener('click', clearAnswer);
-    restartBtn.addEventListener('click', restart);
-    exportBtn.addEventListener('click', exportTxt);
-    printBtn.addEventListener('click', () => window.print());
 
     jumpUnanswered.addEventListener('click', (e) => {
       e.preventDefault();
